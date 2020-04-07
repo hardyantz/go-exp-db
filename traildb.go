@@ -24,7 +24,7 @@ type TrailResponses struct {
 }
 
 const SessionLimit = uint64(30 * 60)
-const tdbPath = "/Users/buyungachmadhardiansyah/Documents/personal-server/exp-traildb/data/pydata-tutorial.tdb"
+const tdbPath = "data/pydata-tutorial.tdb"
 const tdbNewPath = "data/mydata"
 
 func main() {
@@ -35,6 +35,21 @@ func main() {
 		fmt.Println(q)
 
 		res, err := getAll()
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, TrailResponses{
+				Status:  http.StatusBadRequest,
+				Message: err.Error(),
+			})
+		}
+
+		return c.JSON(http.StatusOK, res)
+	})
+
+	e.GET("/get-wiki", func(c echo.Context) error {
+		q := c.QueryString()
+		fmt.Println(q)
+
+		res, err := getWiki()
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, TrailResponses{
 				Status:  http.StatusBadRequest,
@@ -108,6 +123,38 @@ func getAll() ([]map[string]string, error) {
 	var responses []map[string]string
 
 	db, err := tdb.Open(tdbNewPath)
+	if err != nil {
+		return responses, err
+	}
+	defer db.Close()
+
+	for i := uint64(0); i < db.NumTrails; i++ {
+		trail, err := tdb.NewTrail(db, i)
+		if err != nil {
+			panic(err.Error())
+		}
+		for {
+			evt := trail.NextEvent()
+			if evt == nil {
+				trail.Close()
+				break
+			}
+
+			s := evt.ToMap()
+			s["timestamp"] = strconv.FormatUint(evt.Timestamp, 10)
+
+			responses = append(responses, s)
+		}
+	}
+
+	return responses, nil
+}
+
+func getWiki() ([]map[string]string, error) {
+
+	var responses []map[string]string
+
+	db, err := tdb.Open(tdbPath)
 	if err != nil {
 		return responses, err
 	}

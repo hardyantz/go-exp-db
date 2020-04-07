@@ -11,6 +11,7 @@ Simple Application / Experiment golang with rethinkDB & trailDB .
 # Endpoint traildb
 1. `POST /get` Create new trail
 2. `GET /create` Get all trail
+3. `GET /get-wiki` Get all data from sample data (500.000 record) 
 
 # Endpoint rethinkdb
 1. `POST /create` Create new data
